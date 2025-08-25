@@ -144,9 +144,6 @@ public class CsdnPort implements ICsdnPort {
         log.info("API响应状态码: {}", response.code());
         log.info("API响应头: {}", response.headers());
 
-        // 创建领域层响应对象
-        ArticleFunctionResponse articleFunctionResponse = new ArticleFunctionResponse();
-
         // 处理API响应结果
         if (response.isSuccessful() && response.body() != null) {
             // 发布成功的处理逻辑
@@ -157,31 +154,47 @@ public class CsdnPort implements ICsdnPort {
                 log.info("文章ID: {}", result.getData().getId());
                 log.info("文章URL: {}", result.getData().getUrl());
                 
-                // 将API响应转换为领域响应对象
-                articleFunctionResponse.setCode(result.getCode());
-                articleFunctionResponse.setMsg(result.getMsg());
-                articleFunctionResponse.setId(result.getData().getId());
-                articleFunctionResponse.setUrl(result.getData().getUrl());
+                // 构建ArticleData对象
+                ArticleFunctionResponse.ArticleData articleData = ArticleFunctionResponse.ArticleData.builder()
+                        .id(result.getData().getId())
+                        .url(result.getData().getUrl())
+                        .title(request.getTitle())
+                        .description(request.getDescription())
+                        .qrcode(null) // CSDN API可能不返回二维码，设置为null
+                        .build();
+                
+                // 创建并返回领域层响应对象
+                return ArticleFunctionResponse.builder()
+                        .code(result.getCode())
+                        .msg(result.getMsg())
+                        .articleData(articleData)
+                        .build();
             } else {
                 log.warn("API响应成功但数据为空");
-                articleFunctionResponse.setCode(result.getCode());
-                articleFunctionResponse.setMsg(result.getMsg());
+                return ArticleFunctionResponse.builder()
+                        .code(result.getCode())
+                        .msg(result.getMsg())
+                        .articleData(null)
+                        .build();
             }
         } else {
             // 发布失败的处理逻辑
             log.error("文章发布失败！HTTP状态码: {}", response.code());
             
+            String errorMsg;
             if (response.errorBody() != null) {
-                String errorMsg = response.errorBody().string();
+                errorMsg = response.errorBody().string();
                 log.error("API错误信息: {}", errorMsg);
-                articleFunctionResponse.setMsg(errorMsg);
             } else {
-                log.error("HTTP错误信息: {}", response.message());
-                articleFunctionResponse.setMsg(response.message());
+                errorMsg = response.message();
+                log.error("HTTP错误信息: {}", errorMsg);
             }
-            articleFunctionResponse.setCode(response.code());
+            
+            return ArticleFunctionResponse.builder()
+                    .code(response.code())
+                    .msg(errorMsg)
+                    .articleData(null)
+                    .build();
         }
-
-        return articleFunctionResponse;
     }
 }

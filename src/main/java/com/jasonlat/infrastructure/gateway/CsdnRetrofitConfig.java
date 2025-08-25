@@ -77,7 +77,7 @@ public class CsdnRetrofitConfig {
      *   <li>为用户提供合理的等待时间</li>
      * </ul>
      */
-    private static final int CONNECT_TIMEOUT = 30;
+    private static final int CONNECT_TIMEOUT = 300;
 
     /**
      * 读取超时时间（秒）
@@ -92,7 +92,7 @@ public class CsdnRetrofitConfig {
      *   <li>避免因网络波动导致的请求失败</li>
      * </ul>
      */
-    private static final int READ_TIMEOUT = 30;
+    private static final int READ_TIMEOUT = 300;
 
     /**
      * 写入超时时间（秒）
@@ -107,7 +107,7 @@ public class CsdnRetrofitConfig {
      *   <li>确保大型请求能够成功发送</li>
      * </ul>
      */
-    private static final int WRITE_TIMEOUT = 30;
+    private static final int WRITE_TIMEOUT = 300;
 
     /**
      * 创建CSDN服务实例
