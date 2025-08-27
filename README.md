@@ -51,6 +51,8 @@ mvn clean package -DskipTests
 
 ### 4. 配置MCP服务器
 
+#### 方式一：STDIO模式（推荐）
+
 在你的MCP客户端配置文件中添加以下配置：
 
 ```json
@@ -72,7 +74,49 @@ mvn clean package -DskipTests
 }
 ```
 
+#### 方式二：SSE模式（Server-Sent Events）
+
+对于需要更高并发性能或特殊网络环境的场景，可以使用SSE模式：
+
+**1. 启动SSE服务器**
+
+```bash
+# 使用dev-ops目录下的预构建JAR包
+java -jar dev-ops/software/csdn-publish-mcp-server.jar \
+  --server.port=8101 \
+  --csdn.api.cookie="你的CSDN_COOKIE" \
+  --csdn.api.categories="java面试宝典"
+```
+
+**2. 配置MCP客户端**
+
+在你的MCP客户端配置文件中添加SSE连接配置：
+
+```yaml
+spring:
+  ai:
+    mcp:
+      client:
+        request-timeout: 360s
+        sse:
+          connections:
+            mcp-server-csdn:
+              url: http://127.0.0.1:8101
+            mcp-server-wechat:
+              url: http://127.0.0.1:8102
+```
+
+**3. SSE模式优势**
+
+- ✅ **高并发支持**: 支持多个客户端同时连接
+- ✅ **网络友好**: 基于HTTP协议，防火墙友好
+- ✅ **实时通信**: 支持服务器主动推送消息
+- ✅ **负载均衡**: 可以部署多个实例进行负载均衡
+- ✅ **监控便利**: 可以通过HTTP接口进行健康检查
+
 ### 5. 配置参数说明
+
+#### STDIO模式参数
 
 | 参数 | 说明 | 示例值 | 必填 |
 |------|------|--------|------|
@@ -81,6 +125,16 @@ mvn clean package -DskipTests
 | `logging.file.name` | 日志文件路径 | `./data/mcp/csdn.log` | ❌ |
 | `spring.ai.mcp.server.stdio` | MCP标准输入输出模式 | `true` | ✅ |
 | `file.encoding` | 文件编码 | `utf-8` | ❌ |
+
+#### SSE模式参数
+
+| 参数 | 说明 | 示例值 | 必填 |
+|------|------|--------|------|
+| `server.port` | SSE服务器端口 | `8101` | ✅ |
+| `csdn.api.cookie` | CSDN登录Cookie | `uuid_tt_dd=...` | ✅ |
+| `csdn.api.categories` | 文章分类 | `java面试宝典` | ✅ |
+| `spring.ai.mcp.client.request-timeout` | 客户端请求超时时间 | `360s` | ❌ |
+| `spring.ai.mcp.client.sse.connections.*.url` | SSE连接URL | `http://127.0.0.1:8101` | ✅ |
 
 ## 📖 使用方法
 
@@ -137,7 +191,7 @@ AI助手将自动调用MCP服务发布文章到CSDN。
 
 ## 🔧 高级配置
 
-### 自定义配置文件
+### STDIO模式配置文件
 
 创建 `application.yml` 文件：
 
@@ -158,6 +212,49 @@ spring:
     mcp:
       server:
         stdio: true
+```
+
+### SSE模式配置文件
+
+**服务器端配置 (application.yml)**：
+
+```yaml
+server:
+  port: 8101
+
+csdn:
+  api:
+    cookie: "你的CSDN_COOKIE"
+    categories: "技术分享"
+
+logging:
+  level:
+    com.jasonlat: DEBUG
+  file:
+    name: ./logs/csdn-mcp-server.log
+
+spring:
+  ai:
+    mcp:
+      server:
+        sse:
+          enabled: true
+```
+
+**客户端配置 (application.yml)**：
+
+```yaml
+spring:
+  ai:
+    mcp:
+      client:
+        request-timeout: 360s
+        sse:
+          connections:
+            mcp-server-csdn:
+              url: http://127.0.0.1:8101
+            mcp-server-wechat:
+              url: http://127.0.0.1:8102
 ```
 
 ### 环境变量配置
